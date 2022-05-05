@@ -6,10 +6,6 @@ const userSchema = new Schema({
 		type: String,
 		required: true,
 	},
-	username: {
-		type: String,
-		required: true,
-	},
 	email: {
 		type: String,
 		required: true,
@@ -45,6 +41,10 @@ const userSchema = new Schema({
 		default: '0967999999',
 	},
 	birthday: Date,
+	memberId: {
+		type: mongoose.Types.ObjectId,
+		required: false,
+	},
 });
 
 export const UserModel = mongoose.model('User', userSchema);

@@ -1,118 +1,124 @@
-import auth from "../models/auth";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import config from "../config/auth";
+import auth from '../models/auth';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import config from '../config/auth';
+import { PositionModel } from '../models/position.model';
 
 const User = auth.user;
+const Member = auth.member;
 const Role = auth.role;
+const ROLES = auth.ROLES;
 
-const signup = (req, res) => {
-  const user = new User({
-    name: req.body.name,
-    username: req.body.username,
-    email: req.body.email,
-    password: bcrypt.hashSync(req.body.password, 8),
-  });
+const signup = async (req, res) => {
+	const basicInfo = req.body.basicInfo;
+	const memberInfo = req.body.memberInfo;
+	const instance = new User({ ...basicInfo, password: bcrypt.hashSync(basicInfo.password, 8) });
 
-  user.save((err, user) => {
-    if (err) {
-      res.status(500).send({ message: err });
-      return;
-    }
+	Role.find(
+		{
+			name: { $in: basicInfo.role },
+		},
+		(err, roles) => {
+			if (err) {
+				throw new Error(err);
+			}
 
-    if (req.body.roles) {
-      Role.find(
-        {
-          name: { $in: req.body.roles },
-        },
-        (err, roles) => {
-          if (err) {
-            res.status(500).send({ message: err });
-            return;
-          }
+			instance.roles = roles.map((role) => role._id);
 
-          user.roles = roles.map((role) => role._id);
-          user.save((err) => {
-            if (err) {
-              res.status(500).send({ message: err });
-              return;
-            }
+			if (basicInfo.role !== ROLES[0] && Object.keys(memberInfo).length) {
+				const member = new Member({ ...memberInfo });
+				PositionModel.find(
+					{
+						standOf: { $in: memberInfo.position },
+					},
+					(err, valuePositions) => {
+						if (err) {
+							throw new Error(err);
+						}
 
-            res.send({ message: "User was registered successfully!" });
-          });
-        }
-      );
-    } else {
-      Role.findOne({ name: "user" }, (err, role) => {
-        if (err) {
-          res.status(500).send({ message: err });
-          return;
-        }
+						member.positions = valuePositions.map((ps) => ps._id);
+						member.save((err, valueMember) => {
+							if (err) {
+								throw new Error(err);
+							}
+							instance.memberId = valueMember._id;
+							instance.save((err) => {
+								if (err) {
+									throw new Error(err);
+								}
 
-        user.roles = [role._id];
-        user.save((err) => {
-          if (err) {
-            res.status(500).send({ message: err });
-            return;
-          }
+								res.send({ message: 'User was registered successfully!' });
+							});
+						});
+					}
+				);
+			} else {
+				instance.save((err) => {
+					if (err) {
+						throw new Error(err);
+					}
 
-          res.send({ message: "User was registered successfully!" });
-        });
-      });
-    }
-  });
+					res.send({ message: 'User was registered successfully!' });
+				});
+			}
+		}
+	);
 };
 
 const signin = (req, res) => {
-  User.findOne({
-    username: req.body.username,
-  })
-    .populate("roles", "-__v")
-    .exec((err, user) => {
-      if (err) {
-        res.status(500).send({ message: err });
-        return;
-      }
+	console.log(req.body);
+	User.findOne({
+		email: req.body.email,
+	})
+		.populate('roles', '-__v')
+		.exec((err, user) => {
+			if (err) {
+				res.status(500).send({ message: err });
+				return;
+			}
 
-      if (!user) {
-        return res.status(404).send({ message: "User Not found." });
-      }
-      //TODO : ban user -> check status account
+			if (!user) {
+				return res.status(404).send({ message: 'User Not found.' });
+			}
 
-      var passwordIsValid = bcrypt.compareSync(
-        req.body.password,
-        user.password
-      );
+			var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
 
-      if (!passwordIsValid) {
-        return res.status(401).send({
-          accessToken: null,
-          message: "Invalid Password!",
-        });
-      }
+			if (!passwordIsValid) {
+				return res.status(401).send({
+					accessToken: null,
+					message: 'Invalid Password!',
+				});
+			}
 
-      var token = jwt.sign({ id: user.id }, config.secret, {
-        expiresIn: 86400, // 24 hours
-      });
+			var token = jwt.sign({ id: user.id }, config.secret, {
+				expiresIn: 86400, // 24 hours
+			});
 
-      var authorities = [];
+			var authorities = [];
 
-      for (let i = 0; i < user.roles.length; i++) {
-        authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
-      }
-      res.status(200).send({
-        id: user._id,
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        description: user.description,
-        address: user.address,
-        status: user.status,
-        avatar_url: user.avatar_url,
-        roles: authorities,
-        accessToken: token,
-      });
-    });
+			for (let i = 0; i < user.roles.length; i++) {
+				authorities.push('ROLE_' + user.roles[i].name.toUpperCase());
+			}
+			res.status(200).send({
+				...user._doc,
+				roles: authorities,
+				accessToken: token,
+			});
+		});
+};
+
+const getIdDocument = (instance, objectFind) => {
+	return new Promise((resolve, reject) => {
+		instance.find({ ...objectFind }, async (err, values) => {
+			if (err) {
+				reject(err);
+				return;
+			}
+
+			const valueReturn = values.map((value) => value._id) || [];
+			resolve(valueReturn);
+		});
+	});
 };
 
 export const authWebController = { signup, signin };

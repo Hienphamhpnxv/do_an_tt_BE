@@ -1,54 +1,59 @@
-import auth from "../models/auth";
+import auth from '../models/auth';
 const ROLES = auth.ROLES;
 const User = auth.user;
+const Member = auth.member;
 
 const checkDuplicateUsernameOrEmail = (req, res, next) => {
-  // Username
-  User.findOne({
-    username: req.body.username
-  }).exec((err, user) => {
-    if (err) {
-      res.status(500).send({ message: err });
-      return;
-    }
+	const basicInfo = req.body.basicInfo;
+	const memberInfo = req.body.memberInfo;
+	User.findOne({
+		email: basicInfo.email,
+	}).exec((err, user) => {
+		if (err) {
+			res.status(500).send({ message: err });
+			return;
+		}
 
-    if (user) {
-      res.status(400).send({ message: "Failed! Username is already in use!" });
-      return;
-    }
+		if (user) {
+			res.status(400).send({ message: 'Failed! Email is already in use!' });
+			return;
+		}
 
-    // Email
-    User.findOne({
-      email: req.body.email
-    }).exec((err, user) => {
-      if (err) {
-        res.status(500).send({ message: err });
-        return;
-      }
+		// check student code
+		if (basicInfo.role !== ROLES[0]) {
+			Member.findOne({
+				studentCode: memberInfo.studentCode,
+			}).exec((err, member) => {
+				if (err) {
+					res.status(500).send({ message: err });
+					return;
+				}
 
-      if (user) {
-        res.status(400).send({ message: "Failed! Email is already in use!" });
-        return;
-      }
+				if (member) {
+					res.status(400).send({ message: 'Failed! StudentCode is already in use!' });
+					return;
+				}
 
-      next();
-    });
-  });
+				next();
+			});
+		} else {
+			next();
+		}
+	});
 };
 
 const checkRolesExisted = (req, res, next) => {
-  if (req.body.roles) {
-    for (let i = 0; i < req.body.roles.length; i++) {
-      if (!ROLES.includes(req.body.roles[i])) {
-        res.status(400).send({
-          message: `Failed! Role ${req.body.roles[i]} does not exist!`
-        });
-        return;
-      }
-    }
-  }
+	const role = req.body.basicInfo.role;
+	if (role) {
+		if (!ROLES.includes(role)) {
+			res.status(400).send({
+				message: `Failed! Role ${role} does not exist!`,
+			});
+			return;
+		}
+	}
 
-  next();
+	next();
 };
 
-export const verifySignUp = { checkDuplicateUsernameOrEmail, checkRolesExisted }
+export const verifySignUp = { checkDuplicateUsernameOrEmail, checkRolesExisted };
