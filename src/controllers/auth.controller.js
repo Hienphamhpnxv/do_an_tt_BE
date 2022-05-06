@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import config from '../config/auth';
 import { PositionModel } from '../models/position.model';
+import { ClubModel } from '../models/club.model';
+import { MemberModel } from '../models/member.model';
 
 const User = auth.user;
 const Member = auth.member;
@@ -70,8 +72,8 @@ const signin = (req, res) => {
 	User.findOne({
 		email: req.body.email,
 	})
-		.populate('roles', '-__v')
-		.exec((err, user) => {
+		.populate({ path: 'roles', select: '-__v' })
+		.exec(async (err, user) => {
 			if (err) {
 				res.status(500).send({ message: err });
 				return;
@@ -99,10 +101,14 @@ const signin = (req, res) => {
 			for (let i = 0; i < user.roles.length; i++) {
 				authorities.push('ROLE_' + user.roles[i].name.toUpperCase());
 			}
-			res.status(200).send({
-				...user._doc,
-				roles: authorities,
-				accessToken: token,
+			MemberModel.findById(user.memberId, async (err, member) => {
+				const club = await ClubModel.findById(member.club);
+				res.status(200).send({
+					...user._doc,
+					roles: authorities,
+					accessToken: token,
+					club,
+				});
 			});
 		});
 };

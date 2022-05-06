@@ -18,6 +18,9 @@ const memberSchema = new Schema({
 			ref: 'Position',
 		},
 	],
+	club: {
+		type: Types.ObjectId,
+	},
 });
 
 export const MemberModel = model('Member', memberSchema);

@@ -11,12 +11,12 @@ router.get('/test/mod', [authJwt.verifyToken, authJwt.isModerator], userControll
 
 router.get('/test/admin', [authJwt.verifyToken, authJwt.isAdmin], userController.adminBoard);
 
-router.post('', userController.createUser);
+router.post('/create', userController.createUser);
 
 router.put('/:id/update', [authJwt.verifyToken], userController.updateUser);
 
 router.post('/avatar/update', [authJwt.verifyToken], userController.updateAvatar);
 
-router.delete('', userController.deleteUserById);
+router.delete('/:id', userController.deleteUserById);
 
 export const userRouter = router;
