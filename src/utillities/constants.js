@@ -6,7 +6,11 @@ export const httpStatusCode = {
 	UNAUTHORIZED: 401,
 };
 
-export const POSITION = [
+export const ROLES_STATUS = [
+	{
+		name: 'Quản lý',
+		standOf: 'QL',
+	},
 	{
 		name: 'Chủ nhiệm',
 		standOf: 'CN',
@@ -14,10 +18,6 @@ export const POSITION = [
 	{
 		name: 'Phó chủ nhiệm',
 		standOf: 'PCN',
-	},
-	{
-		name: 'Đội trưởng',
-		standOf: 'DT',
 	},
 	{
 		name: 'Thành viên',

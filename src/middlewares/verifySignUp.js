@@ -1,5 +1,5 @@
 import auth from '../models/auth';
-const ROLES = auth.ROLES;
+import { ROLES_STATUS } from '../utillities/constants';
 const User = auth.user;
 const Member = auth.member;
 
@@ -20,7 +20,7 @@ const checkDuplicateUsernameOrEmail = (req, res, next) => {
 		}
 
 		// check student code
-		if (basicInfo.role !== ROLES[0]) {
+		if (basicInfo.role !== ROLES_STATUS[0].standOf) {
 			Member.findOne({
 				studentCode: memberInfo.studentCode,
 			}).exec((err, member) => {
@@ -45,7 +45,8 @@ const checkDuplicateUsernameOrEmail = (req, res, next) => {
 const checkRolesExisted = (req, res, next) => {
 	const role = req.body.basicInfo.role;
 	if (role) {
-		if (!ROLES.includes(role)) {
+		const hasRole = ROLES_STATUS.findIndex((el) => el.standOf === role);
+		if (hasRole === -1) {
 			res.status(400).send({
 				message: `Failed! Role ${role} does not exist!`,
 			});

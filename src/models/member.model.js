@@ -9,17 +9,11 @@ const memberSchema = new Schema({
 		type: String,
 		required: true,
 	},
-	activityBoard: {
-		type: Types.ObjectId,
-	},
-	positions: [
-		{
-			type: Types.ObjectId,
-			ref: 'Position',
-		},
-	],
 	club: {
 		type: Types.ObjectId,
+	},
+	grade: {
+		type: String,
 	},
 });
 

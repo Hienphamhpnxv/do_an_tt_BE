@@ -2,23 +2,23 @@ import auth from '../models/auth';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import config from '../config/auth';
-import { PositionModel } from '../models/position.model';
 import { ClubModel } from '../models/club.model';
 import { MemberModel } from '../models/member.model';
+import { ROLES_STATUS } from '../utillities/constants';
 
 const User = auth.user;
 const Member = auth.member;
 const Role = auth.role;
-const ROLES = auth.ROLES;
 
 const signup = async (req, res) => {
 	const basicInfo = req.body.basicInfo;
 	const memberInfo = req.body.memberInfo;
 	const instance = new User({ ...basicInfo, password: bcrypt.hashSync(basicInfo.password, 8) });
+	const member = new Member({ ...memberInfo });
 
 	Role.find(
 		{
-			name: { $in: basicInfo.role },
+			standOf: { $in: basicInfo.role },
 		},
 		(err, roles) => {
 			if (err) {
@@ -26,35 +26,11 @@ const signup = async (req, res) => {
 			}
 
 			instance.roles = roles.map((role) => role._id);
-
-			if (basicInfo.role !== ROLES[0] && Object.keys(memberInfo).length) {
-				const member = new Member({ ...memberInfo });
-				PositionModel.find(
-					{
-						standOf: { $in: memberInfo.position },
-					},
-					(err, valuePositions) => {
-						if (err) {
-							throw new Error(err);
-						}
-
-						member.positions = valuePositions.map((ps) => ps._id);
-						member.save((err, valueMember) => {
-							if (err) {
-								throw new Error(err);
-							}
-							instance.memberId = valueMember._id;
-							instance.save((err) => {
-								if (err) {
-									throw new Error(err);
-								}
-
-								res.send({ message: 'User was registered successfully!' });
-							});
-						});
-					}
-				);
-			} else {
+			member.save((err, valueMember) => {
+				if (err) {
+					throw new Error(err);
+				}
+				instance.memberId = valueMember._id;
 				instance.save((err) => {
 					if (err) {
 						throw new Error(err);
@@ -62,7 +38,7 @@ const signup = async (req, res) => {
 
 					res.send({ message: 'User was registered successfully!' });
 				});
-			}
+			});
 		}
 	);
 };
@@ -96,18 +72,15 @@ const signin = (req, res) => {
 				expiresIn: 86400, // 24 hours
 			});
 
-			var authorities = [];
-
-			for (let i = 0; i < user.roles.length; i++) {
-				authorities.push('ROLE_' + user.roles[i].name.toUpperCase());
-			}
+			const authorities = user.roles;
 			MemberModel.findById(user.memberId, async (err, member) => {
-				const club = await ClubModel.findById(member.club);
+				const club = member?.club ? await ClubModel.findById(member.club) : null;
 				res.status(200).send({
 					...user._doc,
 					roles: authorities,
 					accessToken: token,
 					club,
+					memberInfo: member,
 				});
 			});
 		});

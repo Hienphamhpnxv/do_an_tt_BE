@@ -3,6 +3,7 @@ import { ClubModel } from '../models/club.model';
 
 const createClub = (req, res) => {
 	const data = req.body;
+	console.log(data);
 	try {
 		ClubModel.findOne(
 			{
@@ -15,12 +16,12 @@ const createClub = (req, res) => {
 
 				if (!club) {
 					const club = new ClubModel({ ...data });
-					club.save((err) => {
+					club.save((err, docs) => {
 						if (err) {
 							throw new Error(err);
 						}
 
-						res.status(200).json({ message: 'Club was registered successfully!' });
+						res.status(200).json(docs._doc);
 					});
 				} else {
 					res.status(303).json({

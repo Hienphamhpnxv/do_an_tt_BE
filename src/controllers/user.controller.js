@@ -4,8 +4,9 @@ import { httpStatusCode } from '../utillities/constants';
 import { uploadImage } from '../apis/imgBB.api';
 import { UserModel } from '../models/user.model';
 import { MemberModel } from '../models/member.model';
-import { PositionModel } from '../models/position.model';
+// import { PositionModel } from '../models/position.model';
 import auth from '../models/auth';
+import { Types } from 'mongoose';
 
 const Member = auth.member;
 const Role = auth.role;
@@ -27,14 +28,53 @@ const moderatorBoard = (req, res) => {
 	res.status(200).send('Moderator Content.');
 };
 
+const getAllUsers = async (req, res) => {
+	// const clubId = req.body.clubId;
+	const clubId = req.params.idClub;
+	const data = await UserModel.aggregate([
+		{
+			$lookup: {
+				from: 'members',
+				localField: 'memberId',
+				foreignField: '_id',
+				as: 'memberInfo',
+			},
+		},
+		{
+			$lookup: {
+				from: 'clubs',
+				localField: 'memberInfo.club',
+				foreignField: '_id',
+				as: 'clubInfo',
+			},
+		},
+		{
+			$lookup: {
+				from: 'roles',
+				localField: 'roles',
+				foreignField: '_id',
+				as: 'role',
+			},
+		},
+	]);
+	const newData = data.filter((el) => el.clubInfo[0]._id.equals(Types.ObjectId(clubId)));
+	res.send([...newData]);
+};
+
 const createUser = async (req, res) => {
 	try {
 		const basicInfo = req.body.basicInfo;
 		const memberInfo = req.body.memberInfo;
+		if (!basicInfo.password) {
+			basicInfo.password = memberInfo.studentCode;
+		}
+
 		const instance = new UserModel({ ...basicInfo, password: bcrypt.hashSync(basicInfo.password, 8) });
+		const member = new Member({ ...memberInfo });
+
 		Role.find(
 			{
-				name: { $in: basicInfo.role },
+				standOf: { $in: basicInfo.role },
 			},
 			(err, roles) => {
 				if (err) {
@@ -42,37 +82,11 @@ const createUser = async (req, res) => {
 				}
 
 				instance.roles = roles.map((role) => role._id);
-
-				if (basicInfo.role !== ROLES[0] && Object.keys(memberInfo).length) {
-					const member = new Member({ ...memberInfo });
-					PositionModel.find(
-						{
-							standOf: { $in: memberInfo.position },
-						},
-						(err, valuePositions) => {
-							if (err) {
-								throw new Error(err);
-							}
-
-							member.positions = valuePositions.map((ps) => ps._id);
-							member.save((err, valueMember) => {
-								if (err) {
-									throw new Error(err);
-								}
-								instance.memberId = valueMember._id;
-								instance.save((err, docs) => {
-									if (err) {
-										throw new Error(err);
-									}
-
-									if (docs) {
-										res.send({ data: docs._doc });
-									}
-								});
-							});
-						}
-					);
-				} else {
+				member.save((err, valueMember) => {
+					if (err) {
+						throw new Error(err);
+					}
+					instance.memberId = valueMember._id;
 					instance.save((err, docs) => {
 						if (err) {
 							throw new Error(err);
@@ -82,7 +96,7 @@ const createUser = async (req, res) => {
 							res.send({ data: docs._doc });
 						}
 					});
-				}
+				});
 			}
 		);
 	} catch (err) {
@@ -93,8 +107,16 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const result = await userService.updateUser(id, req.body);
-		res.status(httpStatusCode.OK).json({ result: result });
+		const result = await userService.updateUser(id, req.body.basicInfo);
+		const memberId = result.memberId;
+		var authorities = [];
+		for (let i = 0; i < result.roles.length; i++) {
+			authorities.push(result.roles[i].standOf.toUpperCase());
+		}
+		const resultMember = await MemberModel.findByIdAndUpdate(memberId, req.body.memberInfo, {
+			returnOriginal: false,
+		});
+		res.status(httpStatusCode.OK).json({ result: { ...result._doc, roles: authorities, memberInfo: { ...resultMember._doc } } });
 	} catch (error) {
 		res.status(httpStatusCode.INTERNAL_SERVER_ERROR).json({ message: new Error(error).message });
 	}
@@ -121,26 +143,27 @@ const updateAvatar = async (req, res) => {
 };
 
 const deleteUserById = async (req, res) => {
-	const { id, memberId } = req.body;
+	const { id } = req.params;
+	console.log(id);
 	try {
 		UserModel.findByIdAndDelete(id, async (err, docs) => {
 			if (err) {
 				throw new Error(err);
 			}
+
+			if (docs && docs.memberId) {
+				MemberModel.findByIdAndDelete(docs.memberId, (err, docs) => {
+					if (err) {
+						throw new Error(err);
+					}
+				});
+			}
 		});
 
-		if (memberId) {
-			MemberModel.findByIdAndDelete(memberId, (err, docs) => {
-				if (err) {
-					throw new Error(err);
-				}
-			});
-		}
-
-		res.status(200).json({ data: true });
+		res.status(200).json({ result: true });
 	} catch (error) {
 		res.status(404).json({
-			data: null,
+			result: false,
 		});
 	}
 };
@@ -159,4 +182,5 @@ export const userController = {
 	updateUser,
 	updateAvatar,
 	deleteUserById,
+	getAllUsers,
 };
