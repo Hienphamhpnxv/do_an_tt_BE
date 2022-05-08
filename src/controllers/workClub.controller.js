@@ -1,9 +1,9 @@
 import { Types } from 'mongoose';
-import { WorkModel } from '../models/work.model';
+import { WorkClubModel } from '../models/workClub.model';
 import { httpStatusCode } from '../utillities/constants';
 const createWork = async (req, res) => {
 	const data = req.body;
-	const work = new WorkModel({ ...data });
+	const work = new WorkClubModel({ ...data });
 	work
 		.save()
 		.then((savedDoc) => {
@@ -15,29 +15,24 @@ const createWork = async (req, res) => {
 };
 
 const getWorks = async (req, res) => {
-	const clubId = req.params.idClub;
-	const data = await WorkModel.aggregate([
+	const data = await WorkClubModel.aggregate([
 		{
 			$lookup: {
-				from: 'users',
-				localField: 'memberWorks',
+				from: 'clubs',
+				localField: 'clubWorks.clubId',
 				foreignField: '_id',
-				as: 'userInfo',
+				as: 'clubInfo',
 			},
 		},
 	]);
-	let newData = data;
-	if (data.length) {
-		newData = data.filter((el) => el.club.equals(Types.ObjectId(clubId)));
-	}
-	res.send([...newData]);
+	res.send([...data]);
 };
 
 const updateWork = async (req, res) => {
 	try {
 		const data = req.body;
 		const { id } = req.params;
-		const result = await WorkModel.findByIdAndUpdate(id, data, {
+		const result = await WorkClubModel.findByIdAndUpdate(id, data, {
 			returnOriginal: false,
 		});
 		res.status(httpStatusCode.OK).json({ ...result });
@@ -49,7 +44,7 @@ const updateWork = async (req, res) => {
 const deleteWorkById = async (req, res) => {
 	const { id } = req.params;
 	try {
-		WorkModel.findByIdAndDelete(id, async (err, docs) => {
+		WorkClubModel.findByIdAndDelete(id, async (err, docs) => {
 			if (err) {
 				throw new Error(err);
 			}
@@ -63,4 +58,4 @@ const deleteWorkById = async (req, res) => {
 	}
 };
 
-export const workController = { getWorks, createWork, deleteWorkById, updateWork };
+export const workClubController = { getWorks, createWork, deleteWorkById, updateWork };

@@ -26,11 +26,21 @@ const signup = async (req, res) => {
 			}
 
 			instance.roles = roles.map((role) => role._id);
-			member.save((err, valueMember) => {
-				if (err) {
-					throw new Error(err);
-				}
-				instance.memberId = valueMember._id;
+			if (memberInfo) {
+				member.save((err, valueMember) => {
+					if (err) {
+						throw new Error(err);
+					}
+					instance.memberId = valueMember._id;
+					instance.save((err) => {
+						if (err) {
+							throw new Error(err);
+						}
+
+						res.send({ message: 'User was registered successfully!' });
+					});
+				});
+			} else {
 				instance.save((err) => {
 					if (err) {
 						throw new Error(err);
@@ -38,7 +48,7 @@ const signup = async (req, res) => {
 
 					res.send({ message: 'User was registered successfully!' });
 				});
-			});
+			}
 		}
 	);
 };

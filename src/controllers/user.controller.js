@@ -57,7 +57,10 @@ const getAllUsers = async (req, res) => {
 			},
 		},
 	]);
-	const newData = data.filter((el) => el.clubInfo[0]._id.equals(Types.ObjectId(clubId)));
+	let newData = data;
+	if (data.length) {
+		newData = data.filter((el) => el.clubInfo[0]?._id.equals(Types.ObjectId(clubId)));
+	}
 	res.send([...newData]);
 };
 

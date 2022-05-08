@@ -1,15 +1,20 @@
 import { model, Schema, Types } from 'mongoose';
 
-const WorkSchema = new Schema(
+const WorkClubSchema = new Schema(
 	{
 		name: {
 			type: String,
 			required: true,
 		},
-		memberWorks: [
+		clubWorks: [
 			{
-				type: Types.ObjectId,
-				ref: 'Member',
+				clubId: {
+					type: Types.ObjectId,
+					ref: 'Club',
+				},
+				content: {
+					type: String,
+				},
 			},
 		],
 		timeStart: {
@@ -26,12 +31,8 @@ const WorkSchema = new Schema(
 		status: {
 			type: Number,
 		},
-		club: {
-			type: Types.ObjectId,
-			required: true,
-		},
 	},
 	{ timestamps: true }
 );
 
-export const WorkModel = model('Work', WorkSchema);
+export const WorkClubModel = model('WorkClub', WorkClubSchema);
