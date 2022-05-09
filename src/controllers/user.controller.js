@@ -56,9 +56,14 @@ const getAllUsers = async (req, res) => {
 				as: 'role',
 			},
 		},
+		{
+			$match: {
+				memberInfo: { $ne: [] },
+			},
+		},
 	]);
 	let newData = data;
-	if (data.length) {
+	if (data.length && clubId) {
 		newData = data.filter((el) => el.clubInfo[0]?._id.equals(Types.ObjectId(clubId)));
 	}
 	res.send([...newData]);

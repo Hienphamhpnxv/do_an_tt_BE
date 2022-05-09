@@ -12,11 +12,9 @@ const ClubSchema = new Schema(
 		},
 		logo: {
 			type: String,
-			// required: true,
 		},
-		founder: {
-			type: Types.ObjectId,
-			ref: 'UserID',
+		description: {
+			type: String,
 		},
 		foundedTime: {
 			type: Date,

@@ -21,5 +21,6 @@ router.post('/avatar/update', [authJwt.verifyToken], userController.updateAvatar
 router.delete('/:id', userController.deleteUserById);
 
 router.get('/all-users/:idClub', userController.getAllUsers);
+router.get('/all-users', userController.getAllUsers);
 
 export const userRouter = router;
