@@ -73,6 +73,7 @@ const createUser = async (req, res) => {
 	try {
 		const basicInfo = req.body.basicInfo;
 		const memberInfo = req.body.memberInfo;
+		console.log(basicInfo, memberInfo);
 		if (!basicInfo.password) {
 			basicInfo.password = memberInfo.studentCode;
 		}

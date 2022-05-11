@@ -1,4 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
+import { HAS_CLASSROOM } from '../utillities/constants';
 
 const ClubSchema = new Schema(
 	{
@@ -19,6 +20,11 @@ const ClubSchema = new Schema(
 		foundedTime: {
 			type: Date,
 			default: new Date(),
+		},
+		hasClassroom: {
+			type: Number,
+			default: HAS_CLASSROOM.NO,
+			required: false,
 		},
 	},
 	{ timestamps: true }
