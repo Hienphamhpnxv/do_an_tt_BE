@@ -22,5 +22,6 @@ router.delete('/:id', userController.deleteUserById);
 
 router.get('/all-users/:idClub', userController.getAllUsers);
 router.get('/all-users', userController.getAllUsers);
+router.put('/update-password-user/:id', userController.updatePassword);
 
 export const userRouter = router;

@@ -7,6 +7,7 @@ import { MemberModel } from '../models/member.model';
 // import { PositionModel } from '../models/position.model';
 import auth from '../models/auth';
 import { Types } from 'mongoose';
+import { escapeRegExp } from 'lodash';
 
 const Member = auth.member;
 const Role = auth.role;
@@ -176,9 +177,34 @@ const deleteUserById = async (req, res) => {
 	}
 };
 
-const updateUserById = async (req, res) => {
+const updatePassword = async (req, res) => {
 	try {
-	} catch (error) {}
+		const { id } = req.params;
+		const { oldPassword, newPassword } = req.body;
+		UserModel.findById(id).exec(async (err, user) => {
+			if (err) {
+				throw new Error(err);
+			} else {
+				var passwordIsValid = bcrypt.compareSync(oldPassword, user.password);
+				if (!passwordIsValid) {
+					return res.status(401).send({
+						accessToken: null,
+						message: 'Invalid Password!',
+					});
+				} else {
+					UserModel.findByIdAndUpdate(id, { password: bcrypt.hashSync(newPassword, 8) }, (err, uses) => {
+						if (err) {
+							throw new Error(err);
+						} else {
+							res.status(httpStatusCode.OK).json({ result: true });
+						}
+					});
+				}
+			}
+		});
+	} catch (error) {
+		res.status(httpStatusCode.INTERNAL_SERVER_ERROR).json({ message: new Error(error).message });
+	}
 };
 
 export const userController = {
@@ -191,4 +217,5 @@ export const userController = {
 	updateAvatar,
 	deleteUserById,
 	getAllUsers,
+	updatePassword,
 };
