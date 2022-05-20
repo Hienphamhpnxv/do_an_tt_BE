@@ -20,7 +20,7 @@ const checkDuplicateUsernameOrEmail = (req, res, next) => {
 		}
 
 		// check student code
-		if (basicInfo.role !== ROLES_STATUS[0].standOf) {
+		if (basicInfo.role !== ROLES_STATUS[0].standOf && basicInfo.role !== ROLES_STATUS[1].standOf) {
 			Member.findOne({
 				studentCode: memberInfo.studentCode,
 			}).exec((err, member) => {

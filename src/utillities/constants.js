@@ -12,6 +12,10 @@ export const ROLES_STATUS = [
 		standOf: 'QL',
 	},
 	{
+		name: 'Giảng viên',
+		standOf: 'GV',
+	},
+	{
 		name: 'Chủ nhiệm',
 		standOf: 'CN',
 	},
@@ -43,4 +47,9 @@ export const STATUS_NOTIFICATION_CLASSROOM = {
 export const HAS_CLASSROOM = {
 	NO: 0,
 	YES: 1,
+};
+
+export const STATUS_EXAM = {
+	DOING: 0,
+	END: 1,
 };

@@ -13,6 +13,6 @@ auth.user = UserModel;
 auth.member = MemberModel;
 auth.role = RoleModel;
 
-auth.ROLES = ['Admin', 'Chairman', 'Member', 'Collaborator'];
+auth.ROLES = ['Admin', 'Teacher', 'Chairman', 'Member', 'Collaborator'];
 
 export default auth;

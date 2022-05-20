@@ -2,33 +2,26 @@ import mongoose from 'mongoose';
 
 const Schema = mongoose.Schema;
 
-const documentSchema = new Schema(
+const examDocumentSchema = new Schema(
 	{
 		title: {
 			type: String,
-			required: true,
 		},
-		classroom: {
+		exam: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: 'Classroom',
+			ref: 'Exam',
 		},
 		url: {
 			type: String,
-			required: true,
 		},
 		type: {
 			type: String,
-			required: true,
 		},
 		author: {
 			type: Schema.Types.ObjectId,
 			required: true,
 			ref: 'User',
-		},
-		isDocumentActive: {
-			type: Boolean,
-			default: false,
 		},
 	},
 	{
@@ -36,4 +29,4 @@ const documentSchema = new Schema(
 	}
 );
 
-export const DocumentModel = mongoose.model('Document', documentSchema);
+export const ExamDocumentModel = mongoose.model('ExamDocument', examDocumentSchema);

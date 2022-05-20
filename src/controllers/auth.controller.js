@@ -27,6 +27,7 @@ const signup = async (req, res) => {
 
 			instance.roles = roles.map((role) => role._id);
 			if (memberInfo) {
+				console.log(instance);
 				member.save((err, valueMember) => {
 					if (err) {
 						throw new Error(err);

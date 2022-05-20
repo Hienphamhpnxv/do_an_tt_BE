@@ -7,6 +7,8 @@ import { roleRouter } from './role.route';
 import { workRouter } from './work.route';
 import { workClubRouter } from './workClub.route';
 import { classroomRoute } from './classroom.route';
+import { documentRoute } from './document.route';
+import { examDocumentRoute } from './exam.route';
 
 const router = express.Router();
 
@@ -17,6 +19,8 @@ router.use('/role', roleRouter);
 router.use('/work', workRouter);
 router.use('/work-club', workClubRouter);
 router.use('/classroom', classroomRoute);
+router.use('/document', documentRoute);
+router.use('/exam', examDocumentRoute);
 
 router.get('/status', (req, res) => {
 	res.status(httpStatusCode.OK).json({
